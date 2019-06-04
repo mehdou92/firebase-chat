@@ -26,6 +26,7 @@ export class ChatLogin extends LitElement {
     handlePost(e){
         e.preventDefault();
         if(!this.email | !this.password) return console.error('Email or password are empty');
+        console.log(this.auth);
         this.auth.signInWithEmailAndPassword(this.email, this.password);
     }
 
