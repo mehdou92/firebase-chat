@@ -8,12 +8,14 @@ class ChatData extends LitElement {
         this.database = {};
         this.path = '';
         this.data = [];
+        this._data = [];
     }
     static get properties() {
         return {
             database: Object,
             path: String,
-            data: Array
+            data: Array,
+            _data: Array
         };
     }
 
@@ -35,12 +37,14 @@ class ChatData extends LitElement {
     nodeHasChanged(event, data) {
         switch(event) {
             case 'child_added':
-                this.data = [...this.data, data.val()];
-                this.dispatchEvent(new CustomEvent('child-changed', { detail: this.data }));
+                this.data = [...this.data, data];
+                this._data = this.data.map(item => item.val());
+                this.dispatchEvent(new CustomEvent('child-changed', { detail: this._data }));
                 break;
             case 'child_removed':
                 this.data = this.data.filter(item => item.key != data.key);
-                this.dispatchEvent(new CustomEvent('child-changed', { detail: this.data }));
+                this._data = this.data.map(item => item.val());
+                this.dispatchEvent(new CustomEvent('child-changed', { detail: this._data }));
                 break;
         }
     }

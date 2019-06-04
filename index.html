@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <meta http-equiv="X-UA-Compatible" content="ie=edge">
+        <title>Document</title>
+        <style>
+            *, *::before, *::after {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            html, body {
+                min-height: 100vh;
+                height: 100%;
+                font-family: sans-serif;
+                background-color: #fefefe;
+            }
+            chat-app[unresolved] {
+                display: block;
+                background-color: #ffffff;
+            }
+            chat-app[unresolved] header {
+                height: 48px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                border-bottom: solid #eeeeee 1px;
+            }
+            chat-app[unresolved] img {
+                height: 42px;
+                width: 42px;
+                display: block;
+            }
+        </style>
+    </head>
+    <body>
+        <script src="./config.js"></script>
+        <chat-app unresolved>
+            <header><img src="./src/assets/images/1f680.png" alt="Logo"> Firechat</header>
+        </chat-app>
+        <script type="module" src="./src/components/chat-app.js"></script>
+    </body>
+</html>
