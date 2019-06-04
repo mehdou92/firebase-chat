@@ -24,12 +24,14 @@ export class ChatLogin extends LitElement {
         this.auth.onAuthStateChanged((user) => {
             console.log(user);
             if(user) {
+                localStorage.setItem('logged', true);
                 return this.dispatchEvent(new CustomEvent('user-logged', {
                     detail: {
                         user
                     }
                 }))
             }
+            localStorage.setItem('logged', false);
         });
     }
 
@@ -37,7 +39,10 @@ export class ChatLogin extends LitElement {
         e.preventDefault();
         if(!this.email | !this.password) return console.error('Email or password are empty');
         console.log(this.auth);
-        this.auth.signInWithEmailAndPassword(this.email, this.password);
+        this.auth.signInWithEmailAndPassword(this.email, this.password)
+            .then(user => {
+                console.info('Login successfull !!!');
+            }).catch(error => console.error);
     }
 
     render() {

@@ -41,12 +41,16 @@ class ChatApp extends LitElement {
          @child-changed="${this.userAdded}"></chat-data>
        <chat-header></chat-header>
        <main>
-        <h2>Hi ${this.user.email}</h2>
-        <chat-auth></chat-auth>
-        <chat-login @user-logged="${this.handleLogin}"></chat-login>
-         <ul>
-           ${this.users.map(user => html`<li>${user.name}</li>`)}
-         </ul>
+        ${!this.user.email ? 
+          html`
+            <chat-auth></chat-auth>
+            <chat-login @user-logged="${this.handleLogin}"></chat-login>
+          `: html `
+            <h2>Hi, ${this.user.email}</h2>
+            <ul>
+              ${this.users.map(user => html`<li>${user.name}</li>`)}
+            </ul>
+          `}
        </main>
      </section>
    `;
