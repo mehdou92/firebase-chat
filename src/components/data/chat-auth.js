@@ -31,14 +31,12 @@ export class ChatAuth extends LitElement {
 
     render() {
         return html`
-            <fieldset>
-                <h1>Create User</h1>
-                <form @submit="${this.handlePost}"> 
-                    <input type="text" @input="${e => this.email = e.target.value}">
-                    <input type="password" @input="${e => this.password = e.target.value}">
-                    <button type="submit">Connexion</button>
-                </form>
-            </fieldset>
+            <h1>Create User</h1>
+            <form @submit="${this.handlePost}"> 
+                <input type="text" @input="${e => this.email = e.target.value}">
+                <input type="password" @input="${e => this.password = e.target.value}">
+                <button type="submit">Sign up</button>
+            </form>
         `;
     }
 }

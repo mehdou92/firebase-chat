@@ -9,6 +9,7 @@ class ChatApp extends LitElement {
     constructor() {
         super();
         this.users = [];
+        this.user = {};
     }
 
     static get properties() {
@@ -17,12 +18,19 @@ class ChatApp extends LitElement {
                 type: Boolean,
                 reflect: true
             },
-            users: Array
+            users: Array,
+            user: Object
         };
     }
 
     firstUpdated() {
         this.unresolved = false;
+    }
+
+    handleLogin(e){
+      const user = e.detail.user;
+      console.log(user);
+      this.user.email = user.email;
     }
 
     render() {
@@ -33,8 +41,9 @@ class ChatApp extends LitElement {
          @child-changed="${this.userAdded}"></chat-data>
        <chat-header></chat-header>
        <main>
+        <h2>Hi ${this.user.email}</h2>
         <chat-auth></chat-auth>
-        <chat-login></chat-login>
+        <chat-login @user-logged="${this.handleLogin}"></chat-login>
          <ul>
            ${this.users.map(user => html`<li>${user.name}</li>`)}
          </ul>

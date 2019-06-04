@@ -21,6 +21,16 @@ export class ChatLogin extends LitElement {
 
     firstUpdated(){
         this.auth = firebase.auth();
+        this.auth.onAuthStateChanged((user) => {
+            console.log(user);
+            if(user) {
+                return this.dispatchEvent(new CustomEvent('user-logged', {
+                    detail: {
+                        user
+                    }
+                }))
+            }
+        });
     }
 
     handlePost(e){
@@ -36,7 +46,7 @@ export class ChatLogin extends LitElement {
             <form @submit="${this.handlePost}"> 
                 <input type="text" @input="${e => this.email = e.target.value}">
                 <input type="password" @input="${e => this.password = e.target.value}">
-                <button type="submit">Connexion</button>
+                <button type="submit">Sign in</button>
             </form>
         `;
     }
