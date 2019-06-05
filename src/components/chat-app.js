@@ -32,28 +32,54 @@ class ChatApp extends LitElement {
  }
 
  static get styles() {
-   return css`
-     * {
-       box-sizing: border-box;
-     }
-     .own { text-align: right; }
-     footer {
-       position: fixed;
-       bottom: 0;
-       width: 100%;
-       padding: 0.5rem 1rem;
-       background-color: #ffffff;
-     }
-     footer form {
-       display: flex;
-       justify-content: space-between;
-     }
-     footer input {
-       width: 100%;
-       display: block;
-     }
-   `;
- }
+  return css`
+    :host {
+      display: block;
+    }
+    * {  box-sizing: border-box }
+    footer {
+      position: fixed;
+      bottom: 0;
+      width: 100%;
+    }
+    footer form {
+      display: flex;
+      justify-content: space-between;
+      background-color: #ffffff;
+      padding: 0.5rem 1rem;
+      width: 100%;
+    }
+    footer form input {
+      width: 100%;
+    }
+
+    ul {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      margin-bottom: 3em;
+    }
+
+    ul li {
+      display: block;
+      padding: 0.5rem 1rem;
+      margin-bottom: 1rem;
+      background-color: #cecece;
+      border-radius: 0 30px 30px 0;
+      width: 70%;
+    }
+    ul li.own {
+      align-self: flex-end;
+      text-align: right;
+      background-color: #16a7f1;
+      color: #ffffff;
+      border-radius: 30px 0 0 30px;
+    }
+  `;
+}
 
  firstUpdated() {
    this.unresolved = false;
@@ -62,8 +88,7 @@ class ChatApp extends LitElement {
  }
 
  handleLogin(e) {
-   const user = e.detail.user;
-   this.user = { ...this.user, email: user.email };
+   this.user = e.detail.user;
    this.logged = localStorage.getItem('logged') == 'true' ? true : false;
  }
 
@@ -71,9 +96,10 @@ class ChatApp extends LitElement {
    e.preventDefault();
    this.database = firebase.database();
 
-   this.database.ref('messages').push({
+   this.database.ref().child('messages').push({
      content: this.message,
-     user: this.user.email,
+     user: this.user.uid,
+     email: this.user.email,
      date: new Date().getTime()
    }).then(snapshot => {
      this.message = '';
@@ -99,7 +125,8 @@ class ChatApp extends LitElement {
              <ul>
                ${this.messages.map(message => html`
                  <li
-                   class="${message.user == this.user.email ? 'own': ''}">
+                   class="${message.user == this.user.uid ? 'own': ''}">
+                   <strong>${message.email} said :</strong>
                    <span>${message.content} - ${this.getDate(message.date)}</span>
                  </li>
                `)}
