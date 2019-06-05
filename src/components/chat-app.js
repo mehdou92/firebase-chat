@@ -1,38 +1,39 @@
-import { LitElement, html, css } from 'lit-element';
+import {LitElement, html, css} from 'lit-element';
 import './layout/navigation/chat-header.js';
 import './data/chat-data.js';
 import './data/chat-auth.js';
 import './data/chat-login.js';
+import './data/chat-store.js';
 
 import firebase from 'firebase/app';
 
 class ChatApp extends LitElement {
 
- constructor() {
-   super();
-   this.user = {};
-   this.users = [];
-   this.message = "";
-   this.messages = [];
-   this.logged = false;
- }
+    constructor() {
+        super();
+        this.user = {};
+        this.users = [];
+        this.message = "";
+        this.messages = [];
+        this.logged = false;
+    }
 
- static get properties() {
-   return {
-     unresolved: {
-       type: Boolean,
-       reflect: true
-     },
-     users: Array,
-     user: Object,
-     message: String,
-     messages: Array,
-     logged: Boolean
-   };
- }
+    static get properties() {
+        return {
+            unresolved: {
+                type: Boolean,
+                reflect: true
+            },
+            users: Array,
+            user: Object,
+            message: String,
+            messages: Array,
+            logged: Boolean
+        };
+    }
 
- static get styles() {
-  return css`
+    static get styles() {
+        return css`
     :host {
       display: block;
     }
@@ -79,53 +80,110 @@ class ChatApp extends LitElement {
       border-radius: 30px 0 0 30px;
     }
   `;
-}
+    }
 
- firstUpdated() {
-   this.unresolved = false;
-   this.data = this.shadowRoot.querySelector("#data");
-   this.logged = localStorage.getItem('logged') == 'true' ? true : false;
- }
+    subscribe() {
+        if (('serviceWorker' in navigator) || ('PushManager' in window)) {
+            Notification.requestPermission()
+                .then((result) => {
+                    if (result === 'denied') {
+                        console.log('Permission wasn\'t granted. Allow a retry.');
+                        return;
+                    }
+                    if (result === 'default') {
+                        console.log('The permission request was dismissed.');
+                        return;
+                    }
+                    console.log('Notification granted', result);
+                    this.sendSubscription();
+                    // Do something with the granted permission.
+                });
+        }
+    }
 
- handleLogin(e) {
-   this.user = e.detail.user;
-   this.logged = localStorage.getItem('logged') == 'true' ? true : false;
- }
+    sendSubscription() {
+        if (Notification.permission === 'granted') {
+            navigator.serviceWorker.ready
+                .then(registration => {
+                    registration.pushManager.subscribe({
+                        userVisibleOnly: true,
+                        applicationServerKey: this.urlBase64ToUint8Array(document.config.publicKey)
+                    }).then(async subscribtion => {
+                        subscribtion.id = this.user.uid;
+                        await fetch('http://localhost:8085/subscribe', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            },
+                            body: JSON.stringify(subscribtion)
+                        })
+                    });
+                });
+        }
+    }
 
- sendMessage(e) {
-   e.preventDefault();
-   this.database = firebase.database();
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding)
+            .replace(/-/g, '+')
+            .replace(/_/g, '/');
 
-   this.database.ref().child('messages').push({
-     content: this.message,
-     user: this.user.uid,
-     email: this.user.email,
-     date: new Date().getTime()
-   }).then(snapshot => {
-     this.message = '';
-   });
- }
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
 
- render() {
-   return html`
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        return outputArray;
+    }
+
+    firstUpdated() {
+        this.unresolved = false;
+        this.data = this.shadowRoot.querySelector("#data");
+        this.logged = localStorage.getItem('logged') == 'true' ? true : false;
+    }
+
+    handleLogin(e) {
+        this.user = e.detail.user;
+        this.logged = localStorage.getItem('logged') == 'true' ? true : false;
+    }
+
+    sendMessage(e) {
+        e.preventDefault();
+        this.database = firebase.firestore();
+
+        this.database.collection('messages').add({
+            content: this.message,
+            user: this.user.uid,
+            email: this.user.email,
+            date: new Date().getTime()
+        });
+        this.message = '';
+        /*   }).then(snapshot => {
+             this.message = '';
+           });*/
+    }
+
+    render() {
+        return html`
      <section>
-       <chat-data
-         id="data"
-         path="messages"
-         @child-changed="${this.messageAdded}">
-       </chat-data>
-       <chat-header></chat-header>
+       <chat-store
+        collection="messages"
+        @child-changed="${this.messageAdded}">
+        </chat-store>
+        <slot name="header"></slot>
        <main>
-         ${ !this.logged ?
-           html`
+         ${!this.logged ?
+            html`
              <chat-auth></chat-auth>
              <chat-login @user-logged="${this.handleLogin}"></chat-login>
-            `: html`
+            ` : html`
              <h2>Hi, ${this.user.email}</h2>
+             <button @click="${this.subscribe}">SUBSCRIBE</button>
              <ul>
                ${this.messages.map(message => html`
                  <li
-                   class="${message.user == this.user.uid ? 'own': ''}">
+                   class="${message.user == this.user.uid ? 'own' : ''}">
                    <strong>${message.email} said :</strong>
                    <span>${message.content} - ${this.getDate(message.date)}</span>
                  </li>
@@ -143,30 +201,34 @@ class ChatApp extends LitElement {
              </form>
            </footer>
            `
-         }
+            }
      </section>
    `;
- }
+    }
 
- messageAdded(e) {
-   this.messages = e.detail;
- }
+    messageAdded(e) {
+        this.messages = e.detail;
+        setTimeout(function () {
+            window.scrollTo(0, document.body.scrollHeight);
+        }, 0);
+    }
 
- userAdded(e) {
-   this.users = e.detail;
- }
+    userAdded(e) {
+        this.users = e.detail;
+    }
 
- getDate(timestamp) {
-   const date = new Date(timestamp);
-   // Hours part from the timestamp
-   const hours = date.getHours();
-   // Minutes part from the timestamp
-   const minutes = "0" + date.getMinutes();
-   // Seconds part from the timestamp
-   const seconds = "0" + date.getSeconds();
+    getDate(timestamp) {
+        const date = new Date(timestamp);
+        // Hours part from the timestamp
+        const hours = date.getHours();
+        // Minutes part from the timestamp
+        const minutes = "0" + date.getMinutes();
+        // Seconds part from the timestamp
+        const seconds = "0" + date.getSeconds();
 
-   // Will display time in 10:30:23 format
-   return `${hours}:${minutes.substr(-2)}:${seconds.substr(-2)}`;
- }
+        // Will display time in 10:30:23 format
+        return `${hours}:${minutes.substr(-2)}:${seconds.substr(-2)}`;
+    }
 }
+
 customElements.define('chat-app', ChatApp);
