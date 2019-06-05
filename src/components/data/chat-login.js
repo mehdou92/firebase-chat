@@ -4,6 +4,11 @@ import 'firebase/auth';
 
 export class ChatLogin extends LitElement {
 
+    constructor() {
+        super();
+        this.email = '';
+        this.password = '';
+    }
     static getStyles() {
         return css`
             :host {
